@@ -18,7 +18,7 @@ def get_posts(db: Session = Depends(get_db)):
 def create_posts(post : schemas.PostCreate, db : Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     # new_post = models.Post(title= post.title, content = post.content, relesed = post.relesed, modified = post.modified) instead of this which is inefficient for long model do unpacking
     print(current_user.email)
-    new_post = models.Post(**post.dict())
+    new_post = models.Post(user_id = current_user.id, **post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post) # to get the newely created data
@@ -26,7 +26,7 @@ def create_posts(post : schemas.PostCreate, db : Session = Depends(get_db), curr
 
 
 @router.get("/posts/{id}", response_model=schemas.ReturnResponse)
-def get_posts_of_id(id: int, db: Session = Depends(get_db)):
+def get_posts_of_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
     post_by_id =  db.query(models.Post).filter(models.Post.id == id).first()
     return post_by_id
 

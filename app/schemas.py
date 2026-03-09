@@ -7,6 +7,7 @@ class PostBase(BaseModel):
     content : str
     relesed: bool = True
     modified : Optional[str] = None
+
     
 class PostCreate(PostBase):
     pass
@@ -30,6 +31,7 @@ class ReturnResponse(BaseModel):
     title: str
     content: str
     created_at : datetime
+    user_id: int
 
     model_config = ConfigDict(from_attributes=True)
     

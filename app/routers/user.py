@@ -10,9 +10,9 @@ router = APIRouter(
 
 @router.get("/users", status_code=status.HTTP_200_OK, response_model=List[schemas.UserData])
 def get_all_user(db:Session = Depends(get_db)):
-    allusers = db.query(models.User).all()
+    allusers =db.query(models.User).all()
     return allusers
-
+ 
 
 @router.post("/create_users", status_code=status.HTTP_201_CREATED, response_model=schemas.UserData)
 def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
