@@ -33,11 +33,16 @@ def get_posts_of_id(id: int, db: Session = Depends(get_db), current_user: int = 
 
 @router.delete("/delete_post/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id:int, db:Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    delete_post = db.query(models.Post).filter(models.Post.id == id)
+    post = db.query(models.Post).filter(models.Post.id == id)
 
-    if delete_post.first() is None:
+    delete_post = post.first()
+
+    if delete_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"the post with {id} dosent exists")
+    
+    if delete_post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authoriaes to delete other post")
     
     delete_post.delete(synchronize_session=False)
     db.commit()
@@ -52,6 +57,10 @@ def update_post(id: int, post:schemas.PostCreate, db: Session = Depends(get_db),
     if update_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f"the post with id {id} doesnt exists ")
+    
+    if update_post.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not authoriaes to update other post")
+    
     
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
