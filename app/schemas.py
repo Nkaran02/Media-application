@@ -32,9 +32,11 @@ class ReturnResponse(BaseModel):
     content: str
     created_at : datetime
     user_id: int
+    # user: UserData  #user info
 
     model_config = ConfigDict(from_attributes=True)
     
+
 class UserData(BaseModel):
     id: int
     name:str
