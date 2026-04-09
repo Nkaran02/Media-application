@@ -58,3 +58,22 @@ class TokenData(BaseModel):
 class Vote(BaseModel):
     post_id: int
     dir: Literal[0,1]
+
+
+
+# for posts 
+class PostOut(BaseModel):
+    id: int
+    title: str
+    content: str
+    created_at: datetime
+    user_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class PostResponse(BaseModel):
+    Post: PostOut  
+    votes: int
+
+    model_config = ConfigDict(from_attributes=True)

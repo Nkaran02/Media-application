@@ -2,15 +2,19 @@ from fastapi import requests,responses,Request, Response, status, HTTPException,
 from typing import Optional, List
 from .. import models, schemas, utils, oauth2
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from ..database import engine, get_db
 
 router = APIRouter(
     tags=['Posts']
 )
 
-@router.get("/posts",status_code=201, response_model=list[schemas.ReturnResponse])
+# @router.get("/posts",status_code=201, response_model=list[schemas.ReturnResponse])
+@router.get("/posts",status_code=201, response_model=list[schemas.PostResponse])
 def get_posts(db: Session = Depends(get_db),limit: int = 10, skip:int = 0, search: Optional[str] = ""):
-    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    # posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(skip).all()
+    posts = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).all()
+
     return posts
 
 
@@ -25,10 +29,16 @@ def create_posts(post : schemas.PostCreate, db : Session = Depends(get_db), curr
     return new_post
 
 
-@router.get("/posts/{id}", response_model=schemas.ReturnResponse)
-def get_posts_of_id(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    post_by_id =  db.query(models.Post).filter(models.Post.id == id).first()
-    return post_by_id
+@router.get("/posts/{id}", response_model=schemas.PostResponse)
+def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+
+    post_by_id = (db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).filter(models.Post.id == id).first())
+
+    if not post_by_id:
+        raise HTTPException(status_code=404, detail=f"Post {id} not found")
+
+    post, votes = post_by_id
+    return {"Post": post, "votes": votes}
 
 
 @router.delete("/delete_post/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -66,3 +76,6 @@ def update_post(id: int, post:schemas.PostCreate, db: Session = Depends(get_db),
     db.commit()
 
     return{"data":f"successfully updated post with id {id}"}
+
+
+
