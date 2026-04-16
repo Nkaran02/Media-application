@@ -1,40 +1,36 @@
-import psycopg2
-import time 
-from psycopg2.extras import RealDictCursor
+import os
+from dotenv import load_dotenv
+from urllib.parse import quote_plus
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = 'postgresql://postgres:Newpassword%40123@localhost/media'
+load_dotenv()
+
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD"))
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_NAME = os.getenv("DB_NAME")
+
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
-SessionLocal = sessionmaker(autocommit = False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
 
-#dependency
+Base = declarative_base()
+
 def get_db():
     db = SessionLocal()
     try:
         yield db
     finally:
         db.close()
-
-
-Base = declarative_base()
-
-
-
-# while True:
-#     try:
-#         conn = psycopg2.connect(
-#             host='localhost', 
-#             database='media', user='postgres', 
-#             password='Newpassword@123', 
-#             cursor_factory=RealDictCursor
-#             )
-#         cursor = conn.cursor()
-#         print("Database connections was successfull")
-#         break
-#     except Exception as error:
-#         print("Connection failed ", error)
-#         time.sleep(2)
